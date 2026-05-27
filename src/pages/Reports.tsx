@@ -94,7 +94,7 @@ useEffect(() => {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-sky-700 font-semibold">Portal &gt; Mis reportes</p>
+            
             <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">Gestión de incidentes</h1>
             <p className="mt-3 max-w-2xl text-sm text-slate-500">Revisa tus reportes, filtra por estado y accede a los detalles de cada caso.</p>
           </div>

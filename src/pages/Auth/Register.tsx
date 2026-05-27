@@ -29,7 +29,7 @@ type FormData = z.infer<typeof schema>;
 export default function Register() {
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { terms: false }
+    defaultValues: { terms: false } as unknown as FormData
   });
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);

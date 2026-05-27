@@ -148,7 +148,7 @@ export default function NewIncident() {
 
               <div>
                 <p className="text-sm font-medium text-slate-700">Tipo de Incidente</p>
-                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="mt-4 flex flex-wrap gap-3">
                   {incidentOptions.map((option) => {
                     const Icon = option.icon;
                     const active = selectedType === option.value;
@@ -163,11 +163,11 @@ export default function NewIncident() {
                             : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
                         }`}
                       >
-                        <div className="flex items-center gap-2 text-slate-800">
-                          <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
+                        <div className="flex items-center gap-2 text-slate-800 min-w-0">
+                          <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
                             <Icon className="h-4 w-4" />
                           </span>
-                          <span className="text-sm font-medium">{option.label}</span>
+                          <span className="text-sm font-medium whitespace-normal">{option.label}</span>
                         </div>
                       </button>
                     );

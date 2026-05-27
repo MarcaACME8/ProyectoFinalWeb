@@ -87,7 +87,7 @@ export async function subscribeToNotifications(
         table: 'notifications',
         filter: `user_id=eq.${userId}`
       },
-      (payload) => {
+      (payload: unknown) => {
         callback(payload as NotificationRealtimePayload);
       }
     );

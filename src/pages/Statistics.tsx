@@ -130,8 +130,17 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen bg-slate-100 px-4 py-8 sm:px-6 lg:px-10">
-      <div className="mx-auto max-w-[1400px] space-y-8">
-        <div className="rounded-[32px] bg-white p-8 shadow-sm ring-1 ring-slate-200">
+      <div className="mx-auto max-w-[1400px] space-y-8 print-container">
+        <div className="print-header no-print">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="title">Sistema de Reportes - Universidad de la Amazonia</div>
+              <div className="meta">Reporte Estadístico de Incidentes</div>
+            </div>
+            <div className="meta">{new Date().toLocaleString('es-CO')}</div>
+          </div>
+        </div>
+        <div className="rounded-[32px] bg-white p-8 shadow-sm ring-1 ring-slate-200 print-card">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm font-medium uppercase tracking-[0.35em] text-slate-500">Estadísticas</p>
@@ -168,6 +177,15 @@ useEffect(() => {
 
         <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
           <section className="rounded-[32px] bg-white p-8 shadow-sm ring-1 ring-slate-200">
+            <div className="flex items-center gap-2 no-print justify-end">
+              <button
+                onClick={() => window.print()}
+                className="no-print inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+              >
+                Imprimir estadísticas
+              </button>
+            </div>
+            <div className="print-card">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-slate-900">Volumen de incidentes</h2>
@@ -178,7 +196,7 @@ useEffect(() => {
               </div>
             </div>
 
-            <div className="mt-8 h-[320px]">
+            <div className="mt-8 h-[320px] print-card">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={volumeData} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
                   <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
@@ -190,10 +208,11 @@ useEffect(() => {
                 </LineChart>
               </ResponsiveContainer>
             </div>
+            </div>
           </section>
 
           <aside className="space-y-6">
-            <section className="rounded-[32px] bg-white p-8 shadow-sm ring-1 ring-slate-200">
+            <section className="rounded-[32px] bg-white p-8 shadow-sm ring-1 ring-slate-200 print-card">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-xl font-semibold text-slate-900">Tipos de incidentes</h2>
@@ -201,7 +220,7 @@ useEffect(() => {
                 </div>
               </div>
 
-              <div className="mt-8 h-[320px]">
+              <div className="mt-8 h-[320px] print-card">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie data={incidentTypes} dataKey="value" nameKey="name" outerRadius={100} innerRadius={55} paddingAngle={4}>
@@ -216,7 +235,7 @@ useEffect(() => {
 
               <div className="mt-6 space-y-3">
                 {incidentTypes.map((item, index) => (
-                  <div key={item.name} className="flex items-center justify-between rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div key={item.name} className="flex items-center justify-between rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 print-card">
                     <div className="flex items-center gap-3">
                       <span className="inline-flex h-3.5 w-3.5 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
                       <span className="text-sm font-medium text-slate-700">{item.name}</span>

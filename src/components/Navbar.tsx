@@ -49,7 +49,7 @@ export default function Navbar() {
     : 'Usuario del sistema';
   return (
     <>
-      <aside className="hidden lg:fixed lg:top-0 lg:left-0 lg:z-20 lg:h-screen lg:w-72 lg:flex lg:flex-col lg:justify-between lg:border-r lg:border-slate-200 lg:bg-white lg:px-6 lg:py-8 lg:overflow-y-auto">
+      <aside className="no-print hidden lg:fixed lg:top-0 lg:left-0 lg:z-20 lg:h-screen lg:w-72 lg:flex lg:flex-col lg:justify-between lg:border-r lg:border-slate-200 lg:bg-white lg:px-6 lg:py-8 lg:overflow-y-auto">
         <div>
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-sky-900 text-white shadow-lg shadow-sky-900/10">
@@ -116,7 +116,7 @@ export default function Navbar() {
         </div>
       </aside>
 
-      <header className="lg:hidden border-b border-slate-200 bg-white px-4 py-4 shadow-sm">
+      <header className="no-print lg:hidden border-b border-slate-200 bg-white px-4 py-4 shadow-sm">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-base font-semibold text-slate-900">{portalTitle}</p>
