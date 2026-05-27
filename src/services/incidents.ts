@@ -1,18 +1,92 @@
 import { supabase } from '../lib/supabase';
 import type { Incident } from '../types';
 
-export async function getAllIncidents(): Promise<{ data: Incident[] | null; error: any }>{
-  const { data, error } = await supabase.from('incidents').select('*').order('created_at', { ascending: false });
-  return { data: data as Incident[] | null, error };
+export interface CreateIncidentPayload {
+  usuario_id: string;
+  titulo: string;
+  tipo: string;
+  descripcion: string;
+  imagen_url: string;
+  ubicacion_texto?: string | null;
+  salon?: string | null;
+  latitud?: number | null;
+  longitud?: number | null;
 }
 
-export async function updateIncidentStatus(id: string, estado: string){
-  const { data, error } = await supabase.from('incidents').update({ estado }).eq('id', id).select().maybeSingle();
+const incidentSelect = `
+  *,
+  incident_groups (
+    id,
+    title,
+    description,
+    status
+  )
+`;
+export async function getAllIncidents(): Promise<{ data: Incident[] | null; error: any }> {
+  const { data, error } = await supabase
+    .from('incidents')
+    .select(`
+      *,
+      incident_groups (
+        id,
+        title,
+        description,
+        status
+      )
+    `)
+    .order('created_at', { ascending: false });
+
+  if (!error && data) {
+    return {
+      data: data as Incident[] | null,
+      error: null
+    };
+  }
+
+  console.warn('getAllIncidents: failed to load incident_groups relation, retrying without relation', error);
+
+  const fallback = await supabase
+    .from('incidents')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  return {
+    data: fallback.data as Incident[] | null,
+    error: fallback.error ?? error
+  };
+}
+
+export async function createIncident(
+  payload: CreateIncidentPayload
+): Promise<{ data: Incident | null; error: any }> {
+  const { data, error } = await supabase
+    .from('incidents')
+    .insert([payload])
+    .select(incidentSelect)
+    .maybeSingle();
+
+  return { data: data as Incident | null, error };
+}
+
+export async function updateIncidentStatus(id: string, estado: string) {
+  const { data, error } = await supabase
+    .from('incidents')
+    .update({ estado })
+    .eq('id', id)
+    .select(incidentSelect)
+    .maybeSingle();
+
   return { data, error };
 }
 
-export async function groupIncidents(ids: string[]){
-  const grupo_id = crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
-  const { data, error } = await supabase.from('incidents').update({ grupo_id }).in('id', ids).select();
-  return { data, error, grupo_id };
+export async function groupIncidents(ids: string[]) {
+  const group_id = crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+
+  const { data, error } = await supabase
+    .from('incidents')
+    .update({ grupo_id: group_id })
+    .in('id', ids)
+    .select(incidentSelect);
+
+  return { data, error, group_id };
 }

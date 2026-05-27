@@ -18,7 +18,15 @@ useEffect(() => {
 
     let query = supabase
       .from('incidents')
-      .select('*')
+      .select(`
+        *,
+        incident_groups (
+          id,
+          title,
+          description,
+          status
+        )
+      `)
       .order('created_at', { ascending: false });
 
     // Usuarios normales -> solo sus incidentes
@@ -30,6 +38,19 @@ useEffect(() => {
 
     if (!error && data) {
       setIncidents(data as Incident[]);
+      setLoading(false);
+      return;
+    }
+
+    console.warn('Dashboard: failed to load incident_groups relation, retrying without relation', error);
+
+    const fallback = await supabase
+      .from('incidents')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!fallback.error && fallback.data) {
+      setIncidents(fallback.data as Incident[]);
     }
 
     setLoading(false);
@@ -95,7 +116,7 @@ useEffect(() => {
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-500">Total Reports</p>
+                <p className="text-sm font-medium text-slate-500">Total de reportes</p>
                 <p className="mt-4 text-3xl font-semibold text-slate-900">{loading ? <Skeleton className="h-8 w-24" /> : counts.total}</p>
               </div>
               <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
@@ -108,7 +129,7 @@ useEffect(() => {
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-500">In Process</p>
+                <p className="text-sm font-medium text-slate-500">En Proceso</p>
                 <p className="mt-4 text-3xl font-semibold text-slate-900">{loading ? <Skeleton className="h-8 w-24" /> : counts.inProcess}</p>
               </div>
               <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
@@ -121,7 +142,7 @@ useEffect(() => {
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-500">Resolved</p>
+                <p className="text-sm font-medium text-slate-500">Resueltos</p>
                 <p className="mt-4 text-3xl font-semibold text-slate-900">{loading ? <Skeleton className="h-8 w-24" /> : counts.resolved}</p>
               </div>
               <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">

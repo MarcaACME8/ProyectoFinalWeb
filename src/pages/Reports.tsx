@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Download, FilePlus, Search, MoreHorizontal } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { getAllIncidents } from '../services/incidents';
 import { Incident } from '../types';
 import Skeleton from '../components/Skeleton';
 import { useAuth } from '../context/AuthProvider';
@@ -11,6 +11,12 @@ const statusOptions = [
   { value: 'reportado', label: 'Reportado' },
   { value: 'en_proceso', label: 'En proceso' },
   { value: 'resuelto', label: 'Resuelto' },
+];
+
+const groupFilterOptions = [
+  { value: 'all', label: 'Todos' },
+  { value: 'grouped', label: 'Solo agrupados' },
+  { value: 'ungrouped', label: 'Sin grupo' },
 ];
 
 const tipoLabels: Record<string, string> = {
@@ -25,6 +31,8 @@ export default function Reports() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
+  const [groupFilter, setGroupFilter] = useState('all');
+  const [selectedGroupTitle, setSelectedGroupTitle] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
  const { user, profile } = useAuth();
@@ -33,20 +41,11 @@ useEffect(() => {
   if (!user || !profile) return;
 
   (async () => {
-    let query = supabase
-      .from('incidents')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    // Si NO es admin, solo ve sus incidentes
-    if (profile.rol !== 'admin') {
-      query = query.eq('usuario_id', user.id);
-    }
-
-    const { data, error } = await query;
+    const { data, error } = await getAllIncidents();
 
     if (!error && data) {
-      setIncidents(data as Incident[]);
+      const filtered = profile.rol !== 'admin' ? data.filter((incident) => incident.usuario_id === user.id) : data;
+      setIncidents(filtered);
     }
 
     setLoading(false);
@@ -58,6 +57,25 @@ useEffect(() => {
       if (statusFilter && incident.estado !== statusFilter) {
         return false;
       }
+
+    const groupId = incident.incident_groups?.id ?? incident.grupo_id;
+      const isGrouped = !!groupId;
+
+      if (groupFilter === 'grouped' && !isGrouped) {
+        return false;
+      }
+
+      if (groupFilter === 'ungrouped' && isGrouped) {
+        return false;
+      }
+
+      if (selectedGroupTitle) {
+        const title = incident.incident_groups?.title ?? 'Agrupado';
+        if (title !== selectedGroupTitle) {
+          return false;
+        }
+      }
+
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         return (
@@ -69,7 +87,7 @@ useEffect(() => {
       }
       return true;
     });
-  }, [incidents, statusFilter, searchQuery]);
+  }, [incidents, statusFilter, searchQuery, groupFilter, selectedGroupTitle]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -96,7 +114,7 @@ useEffect(() => {
         </div>
 
         <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="grid gap-4 lg:grid-cols-[1fr_1fr_2fr]">
+          <div className="grid gap-4 lg:grid-cols-[1fr_1fr_1fr]">
             <div>
               <label className="block text-sm font-medium text-slate-700">Estado</label>
               <select
@@ -105,6 +123,24 @@ useEffect(() => {
                 className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-sky-500 focus:outline-none"
               >
                 {statusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Grupo</label>
+              <select
+                value={groupFilter}
+                onChange={(event) => {
+                  setGroupFilter(event.target.value);
+                  if (event.target.value !== 'grouped') {
+                    setSelectedGroupTitle('');
+                  }
+                }}
+                className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-sky-500 focus:outline-none"
+              >
+                {groupFilterOptions.map((option) => (
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
               </select>
@@ -122,14 +158,34 @@ useEffect(() => {
                 />
               </div>
             </div>
-
-            <div className="flex items-end justify-end">
-              <button className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
-                <MoreHorizontal className="w-4 h-4" />
-                Aplicar filtros
-              </button>
-            </div>
           </div>
+
+          {groupFilter === 'grouped' && (
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-slate-700">Seleccionar grupo</label>
+              <select
+                value={selectedGroupTitle}
+                onChange={(event) => setSelectedGroupTitle(event.target.value)}
+                className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-sky-500 focus:outline-none"
+              >
+                <option value="">Todos los grupos</option>
+                {Array.from(
+                  incidents
+                    .filter((incident) => Boolean(incident.incident_groups?.title))
+                    .reduce((acc, incident) => {
+                      const title = incident.incident_groups?.title ?? 'Agrupado';
+                      if (!acc.has(title)) {
+                        acc.set(title, title);
+                      }
+                      return acc;
+                    }, new Map<string, string>()),
+                  ([title]) => ({ title })
+                ).map((group) => (
+                  <option key={group.title} value={group.title}>{group.title}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </section>
 
         <section className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
@@ -149,6 +205,7 @@ useEffect(() => {
                   <th className="px-6 py-4">Tipo</th>
                   <th className="px-6 py-4">Fecha</th>
                   <th className="px-6 py-4">Estado</th>
+                  <th className="px-6 py-4">Grupo</th>
                   <th className="px-6 py-4">Acciones</th>
                 </tr>
               </thead>
@@ -166,7 +223,7 @@ useEffect(() => {
                   ))
                 ) : filteredIncidents.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-slate-500">No hay reportes que coincidan con los filtros.</td>
+                    <td colSpan={7} className="px-6 py-8 text-center text-slate-500">No hay reportes que coincidan con los filtros.</td>
                   </tr>
                 ) : (
                   filteredIncidents.map((incident) => (
@@ -187,6 +244,15 @@ useEffect(() => {
                         >
                           {incident.estado === 'resuelto' ? 'Resuelto' : incident.estado === 'en_proceso' ? 'En proceso' : 'Reportado'}
                         </span>
+                      </td>
+                      <td className="px-6 py-5">
+                        {(incident.incident_groups || incident.grupo_id) ? (
+                          <span className="inline-flex rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
+                            {incident.incident_groups?.title ?? 'Agrupado'}
+                          </span>
+                        ) : (
+                          <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Sin grupo</span>
+                        )}
                       </td>
                       <td className="px-6 py-5 text-slate-700">
                         <Link to={`/incidents/${incident.id}`} className="inline-flex items-center gap-2 text-sky-600 font-medium hover:text-sky-700">

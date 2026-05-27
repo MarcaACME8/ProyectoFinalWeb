@@ -16,6 +16,7 @@ import AdminRoute from './routes/AdminRoute'
 import AdminDashboard from './pages/Admin/AdminDashboard'
 import IncidentsAdmin from './pages/Admin/IncidentsAdmin'
 import IncidentDetail from './pages/Incidents/IncidentDetail'
+import Notifications from './pages/Notifications'
 import Profile from './pages/Profile'
 import Reports from './pages/Reports'
 import Statistics from './pages/Statistics'
@@ -85,6 +86,14 @@ function AppContent() {
                   element={
                     <ProtectedRoute>
                       <Reports />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/notifications"
+                  element={
+                    <ProtectedRoute>
+                      <Notifications />
                     </ProtectedRoute>
                   }
                 />

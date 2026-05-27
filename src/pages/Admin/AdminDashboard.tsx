@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { getAllIncidents } from '../../services/incidents';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from 'recharts';
 
@@ -53,6 +54,21 @@ export default function AdminDashboard(){
               </BarChart>
             </ResponsiveContainer>
           </div>
+        </div>
+      </div>
+      <div className="mt-8 rounded-[32px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Gestión</p>
+            <h3 className="mt-2 text-xl font-semibold text-slate-900">Acceso rápido a la administración de incidentes</h3>
+            <p className="mt-2 text-sm text-slate-500">Desde aquí puedes abrir el panel dedicado a la agrupación, asignación y seguimiento de incidentes.</p>
+          </div>
+          <Link
+            to="/admin/incidents"
+            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+          >
+            Ir a administración de incidentes
+          </Link>
         </div>
       </div>
     </div>

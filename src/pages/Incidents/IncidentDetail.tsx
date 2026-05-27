@@ -6,6 +6,7 @@ import Skeleton from '../../components/Skeleton';
 import { toast } from 'sonner';
 import { ArrowRight, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthProvider';
+import { updateIncidentStatus } from '../../services/incidents';
 
 const priorityLabels: Record<string, { label: string; color: string; subtitle: string }> = {
   reportado: { label: 'Alta', color: 'bg-rose-100 text-rose-700', subtitle: 'Revisión urgente' },
@@ -18,7 +19,7 @@ export default function IncidentDetail() {
   const [incident, setIncident] = useState<Incident | null>(null);
   const [reporter, setReporter] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState('reportado');
+  const [status, setStatus] = useState<Incident['estado']>('reportado');
   const [saving, setSaving] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
 const { profile } = useAuth();
@@ -27,8 +28,31 @@ const { profile } = useAuth();
 
     const loadIncident = async () => {
       setLoading(true);
-      const { data } = await supabase.from('incidents').select('*').eq('id', id).maybeSingle();
-      const incidentData = data as Incident | null;
+      const { data, error } = await supabase
+        .from('incidents')
+        .select(`
+          *,
+          incident_groups (
+            id,
+            title,
+            description,
+            status
+          )
+        `)
+        .eq('id', id)
+        .maybeSingle();
+      let incidentData = data as Incident | null;
+
+      if (error || !incidentData) {
+        console.warn('IncidentDetail: failed to load incident_groups relation, retrying without relation', error);
+        const fallback = await supabase
+          .from('incidents')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+        incidentData = fallback.data as Incident | null;
+      }
+
       setIncident(incidentData);
       setStatus(incidentData?.estado ?? 'reportado');
 
@@ -46,7 +70,7 @@ const { profile } = useAuth();
   const handleStatusChange = async () => {
     if (!incident) return;
     setSaving(true);
-    const { error } = await supabase.from('incidents').update({ estado: status }).eq('id', incident.id).select().maybeSingle();
+    const { error } = await updateIncidentStatus(incident.id, status);
     setSaving(false);
 
     if (error) {
@@ -181,6 +205,22 @@ const { profile } = useAuth();
                 )}
               </div>
 
+              {(incident.group_id || incident.grupo_id) && (
+                <div className="rounded-[32px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                  <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Agrupación</p>
+                  <p className="mt-3 text-lg font-semibold text-slate-900">Incidente agrupado</p>
+                  <p className="mt-2 text-sm text-slate-500">Este incidente forma parte de un grupo. Los cambios de estado pueden sincronizarse desde el panel administrativo.</p>
+                  {incident.incident_groups && (
+                    <div className="mt-5 rounded-[28px] bg-slate-50 p-4 text-slate-700">
+                      <p className="text-sm font-semibold text-slate-900">{incident.incident_groups.title}</p>
+                      <p className="mt-2 text-sm text-slate-500">{incident.incident_groups.description || 'Sin descripción del grupo'}</p>
+                      <p className="mt-3 text-xs uppercase tracking-[0.3em] text-slate-500">Estado del grupo</p>
+                      <p className="mt-2 text-sm font-semibold text-slate-900 capitalize">{incident.incident_groups.status.replace('_', ' ')}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {profile?.rol === 'admin' && (
   <div className="rounded-[32px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
     <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
@@ -198,7 +238,7 @@ const { profile } = useAuth();
     <div className="mt-6 space-y-4">
       <select
         value={status}
-        onChange={(event) => setStatus(event.target.value)}
+        onChange={(event) => setStatus(event.target.value as Incident['estado'])}
         className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
       >
         <option value="reportado">Reportado</option>

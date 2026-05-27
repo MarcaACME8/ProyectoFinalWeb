@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
 import { Building, Droplet, MapPin, Save, Shield, Sparkles, Zap, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthProvider';
+import { createIncident } from '../../services/incidents';
 
 const schema = z.object({
   titulo: z.string().min(5, 'Ingrese un título para el incidente'),
@@ -81,19 +82,17 @@ export default function NewIncident() {
       data.ubicacion_texto ||
       (location ? `GPS: ${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}` : data.salon ?? '');
 
-    const { error } = await supabase.from('incidents').insert([
-      {
-        usuario_id: uid,
-        titulo: data.titulo,
-        tipo: data.tipo,
-        descripcion: data.descripcion,
-        imagen_url: publicUrl.publicUrl,
-        ubicacion_texto: ubicacionText,
-        salon: data.salon ?? null,
-        latitud: location?.lat ?? null,
-        longitud: location?.lng ?? null
-      }
-    ]);
+    const { error } = await createIncident({
+      usuario_id: uid,
+      titulo: data.titulo,
+      tipo: data.tipo,
+      descripcion: data.descripcion,
+      imagen_url: publicUrl.publicUrl,
+      ubicacion_texto: ubicacionText,
+      salon: data.salon ?? null,
+      latitud: location?.lat ?? null,
+      longitud: location?.lng ?? null
+    });
 
     setLoading(false);
     if (error) {
@@ -108,7 +107,7 @@ export default function NewIncident() {
       <div className="mx-auto max-w-[1400px] space-y-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-sm font-medium uppercase tracking-[0.35em] text-slate-500">Portal &gt; Crear Reporte</p>
+           
             <h1 className="mt-4 text-3xl font-semibold text-slate-900">Reportar Incidente Nuevo</h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-500">Complete los detalles a continuación para iniciar el proceso de resolución institucional.</p>
           </div>
@@ -271,7 +270,7 @@ export default function NewIncident() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <h2 className="text-xl font-semibold text-slate-900">Evidencia Fotográfica</h2>
-              <p className="mt-2 text-sm text-slate-500">Adjunte hasta 5 imágenes claras del incidente para agilizar la evaluación.</p>
+              <p className="mt-2 text-sm text-slate-500">Adjunte una imagen del incidente para agilizar la evaluación.</p>
             </div>
             <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700">JPG, PNG hasta 10MB cada una</span>
           </div>
@@ -280,7 +279,7 @@ export default function NewIncident() {
             <span className="inline-flex h-14 w-14 items-center justify-center rounded-3xl bg-white text-slate-700 shadow-sm">
               <MapPin className="h-6 w-6" />
             </span>
-            <span className="mt-4 text-sm font-semibold text-slate-900">Arrastre las imágenes aquí o haga clic para subir</span>
+            <span className="mt-4 text-sm font-semibold text-slate-900">Haga clic para subir</span>
             <span className="mt-2 text-sm text-slate-400">JPG, PNG hasta 10MB cada una</span>
             <input
               id="upload"

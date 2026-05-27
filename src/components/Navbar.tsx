@@ -1,12 +1,14 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Activity, BarChart3, FileText, Grid, HelpCircle, LogOut, ShieldAlert, UserCircle } from 'lucide-react';
+import { Activity, BarChart3, FileText, Grid, LogOut, ShieldAlert, UserCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthProvider';
+import { useNotifications } from '../hooks/useNotifications';
 
 export default function Navbar() {
   const navigate = useNavigate();
   const { user, profile, loading, logout } = useAuth();
+  const { unreadCount } = useNotifications();
 
   const handleLogout = async () => {
     const { error } = await logout();
@@ -71,6 +73,17 @@ export default function Navbar() {
             <Link to="/reports" className="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-700 transition hover:bg-slate-100 hover:text-slate-900">
               <FileText className="w-4 h-4" />
               {reportsLabel}
+            </Link>
+            <Link to="/notifications" className="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-slate-700 transition hover:bg-slate-100 hover:text-slate-900">
+              <div className="flex items-center gap-3">
+                <Activity className="w-4 h-4" />
+                Notificaciones
+              </div>
+              {unreadCount > 0 && (
+                <span className="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-rose-500 px-2 py-1 text-[0.65rem] font-semibold text-white">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </Link>
             <Link to="/statistics" className="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-700 transition hover:bg-slate-100 hover:text-slate-900">
               <BarChart3 className="w-4 h-4" />
